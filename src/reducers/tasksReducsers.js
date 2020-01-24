@@ -1,6 +1,6 @@
 "use strict";
 
-export const tasksReducers = (state = { tasks: [] }, action) => {
+export const tasksReducers = (state = { tasks: [{action:"a",dateAdded:new Date()},{action:"b",dateAdded:new Date()}] }, action) => {
   switch (action.type) {
     case "CREATE_TASK":
       return { tasks: [...state.tasks, ...action.payload] };
