@@ -7,10 +7,10 @@ export const getResources = () => {
 };
 
 //Create Resource
-export const createResource = (resource, resourceType) => {
+export const createResource = resource => {
   return {
     type: "CREATE_RESOURCE",
-    payload: { resource, resourceType }
+    payload: { resource }
   };
 };
 
@@ -39,5 +39,12 @@ export const handleLoading = value => {
   return {
     type: "IS_LOADING",
     payload: value
+  };
+};
+
+export const handleInput = (key, value) => {
+  return {
+    type: "SET_INPUT",
+    payload: { key, value }
   };
 };

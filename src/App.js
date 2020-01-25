@@ -1,11 +1,28 @@
 import React, { Component } from "react";
 import ListUsers from "./components/ListUsers";
 import ListTasks from "./components/ListTasks";
-import { Tabs, Button, Table, Tag, Divider, Modal, Input, Progress } from "antd";
+import {
+  Tabs,
+  Button,
+  Table,
+  Tag,
+  Divider,
+  Modal,
+  Input,
+  Progress
+} from "antd";
 import { connect } from "react-redux";
 import "antd/dist/antd.css";
 import { bindActionCreators } from "redux";
-import { getResources, createResource, updateResource, deleteResource } from "./actions/resourceActions";
+import {
+  getResources,
+  createResource,
+  updateResource,
+  deleteResource,
+  handleLoading,
+  handleModal,
+  handleInput
+} from "./actions/resourceActions";
 
 class App extends Component {
   componentDidMount() {
@@ -14,11 +31,13 @@ class App extends Component {
   }
 
   async wait(duration = 1000) {
-    this.setState({ isLoading: true });
+    this.props.handleLoading(true);
+    this.props.createResource("user");
     await new Promise(resolve =>
       setTimeout(() => {
         console.log("resolve", resolve);
-        this.setState({ isLoading: false, openModal: false });
+        this.props.handleLoading(false);
+        this.props.handleModal(false);
       }, duration)
     );
   }
@@ -34,7 +53,8 @@ class App extends Component {
                   <Button
                     onClick={e => {
                       e.preventDefault();
-                      this.setState({ openModal: true });
+                      console.log("button clicked");
+                      this.props.handleModal(true);
                     }}
                   >
                     Create {e.slice(0, -1)}
@@ -69,8 +89,23 @@ class App extends Component {
                     ]}
                   >
                     <div>
-                      <Input style={{ marginBottom: "10px" }} placeholder="Enter name" required></Input>
-                      <Input placeholder="Enter email" type="email"></Input>
+                      <Input
+                        style={{ marginBottom: "10px" }}
+                        placeholder="Enter name"
+                        onChange={e => {
+                          e.preventDefault();
+                          this.props.handleInput("name", e.target.value);
+                        }}
+                        required
+                      />
+                      <Input
+                        placeholder="Enter email"
+                        onChange={e => {
+                          e.preventDefault();
+                          this.props.handleInput("email", e.target.value);
+                        }}
+                        type="email"
+                      />
                     </div>
                   </Modal>
                 </div>
@@ -85,7 +120,7 @@ class App extends Component {
                         render: () => (
                           <span>
                             <a>Edit </a>
-                            <Divider type="vertical"></Divider>
+                            <Divider type="vertical" />
                             <a>Delete </a>
                           </span>
                         )
@@ -95,7 +130,7 @@ class App extends Component {
                       { id: "1", name: "a" },
                       { id: "2", name: "b" }
                     ]}
-                  ></Table>
+                  />
                 </div>
               </Tabs.TabPane>
             );
@@ -108,16 +143,29 @@ class App extends Component {
 
 function mapStateToProps(state) {
   return {
-    resources: state.resources.resources,
-    users: state.resources.resources.users,
-    todos: state.resources.resources.todos,
+    users: state.resources.users,
+    todos: state.resources.todos,
     isLoading: state.resources.isLoading,
     openModal: state.resources.openModal
   };
 }
 
 function mapDispatchToProps(dispatch) {
-  return bindActionCreators({ getResources, createResource }, dispatch);
+  return bindActionCreators(
+    {
+      getResources,
+      createResource,
+      updateResource,
+      deleteResource,
+      handleModal,
+      handleLoading,
+      handleInput
+    },
+    dispatch
+  );
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(App);

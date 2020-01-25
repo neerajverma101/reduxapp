@@ -1,12 +1,22 @@
 export const resourcesReducers = (
   state = {
-    resources: [{ Todos: [{}], Users: [{}] }],
+    todos: [{}],
+    users: [{}],
     isLoading: false,
-    openModal: false
+    openModal: false,
+    name: "",
+    email: "",
+    action: "",
+    dateAdded: ""
   },
   action
 ) => {
   switch (action.type) {
+    case "SET_INPUT":
+      let value = action.payload.value;
+      let field = action.payload.key;
+      return { [field]: value };
+
     case "OPEN_MODAL":
       return { openModal: action.payload };
     case "IS_LOADING":
@@ -14,10 +24,28 @@ export const resourcesReducers = (
 
     case "GET_RESOURCES":
       console.log("getting resources---", state);
-      return { ...state, resources: [...state.resources] };
+      let todos = localStorage.getItem("todos");
+      let users = localStorage.getItem("users");
+      return { todos, users };
       break;
     case "CREATE_RESOURCE":
-      return { users: [...state.users, ...action.payload] };
+      if (action.payload === "user") {
+        let id = !state.users ? 0 : ++state.users.length;
+        let data = { id: id, name: state.name, email: state.email };
+        let usersData = !state.todos ? [data] : [...state.users, data];
+        localStorage.setItem("users", JSON.stringify(usersData));
+        return { users: usersData };
+      } else {
+        let id = !state.todos ? 0 : ++state.todos.length;
+        let data = {
+          id: id,
+          actionName: state.action,
+          dateAdded: state.dateAdded
+        };
+        let todosData = !state.todos ? [data] : [...state.todos, data];
+        localStorage.setItem("todos", JSON.stringify(todosData));
+        return { todos: todosData };
+      }
       break;
     case "UPDATE_RESOURCE":
       const currentUserToUpdate = [...state.users];
@@ -44,7 +72,10 @@ export const resourcesReducers = (
         return user.id === action.payload.id;
       });
       return {
-        users: [...currentUserToDelete.slice(0, indexToDelete), ...currentUserToDelete.slice(indexToDelete + 1)]
+        users: [
+          ...currentUserToDelete.slice(0, indexToDelete),
+          ...currentUserToDelete.slice(indexToDelete + 1)
+        ]
       };
       break;
     default:
