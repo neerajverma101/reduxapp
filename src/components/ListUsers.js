@@ -10,7 +10,7 @@ class ListUsers extends Component {
 
   render() {
     console.log("users: ", this.props.users);
-    return <div>Users</div>;
+    return <div>users list</div>;
   }
 }
 function mapStateToProps(state) {
