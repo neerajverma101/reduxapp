@@ -8,6 +8,7 @@ export const resourcesReducers = (
     email: "",
     actionName: "",
     dateAdded: "",
+    fieldId: "",
     activeResource: "1"
   },
   action
@@ -48,6 +49,8 @@ export const resourcesReducers = (
         let usersData = !state.users && state.users.length ? [data] : [...state.users, data];
         console.log("usersdata data---", usersData);
         localStorage.setItem("users", JSON.stringify(usersData));
+        state.name = "";
+        state.email = "";
         return { ...state, users: usersData };
       } else {
         console.log("creating a todo", state);
@@ -60,35 +63,48 @@ export const resourcesReducers = (
         let todosData = !state.todos ? [data] : [...state.todos, data];
         console.log("todos data---", todosData);
         localStorage.setItem("todos", JSON.stringify(todosData));
+        state.actionName = "";
+        state.dateAdded = "";
         return { ...state, todos: todosData };
       }
       break;
     case "UPDATE_RESOURCE":
-      const currentUserToUpdate = [...state.users];
-      const indexToUpdate = currentUserToUpdate.findIndex(user => {
-        return user.id === action.payload.id;
+      const currentResourceToUpdate = state.activeResource === "1" ? [...state.todos] : [...state.users];
+      const indexToUpdate = currentResourceToUpdate.findIndex(resource => {
+        return resource.id === action.payload.id;
       });
-      const newUserToUpdate = {
-        ...currentUserToUpdate[indexToUpdate],
-        name: action.payload.name,
-        email: action.payload.email
+      console.log("index to update", indexToUpdate);
+      const newResourceToUpdate = {
+        ...currentResourceToUpdate[indexToUpdate],
+        [state.activeResource === "1" ? "actionName" : "name"]: action.payload.value1,
+        [state.activeResource === "1" ? "dateAdded" : "email"]: action.payload.value2
       };
-      console.log("user to be updated", newUserToUpdate);
+      console.log("user to be updated", newResourceToUpdate);
       return {
         users: [
-          ...currentUserToUpdate.slice(0, indexToUpdate),
-          newUserToUpdate,
-          ...currentUserToUpdate.slice(indexToUpdate + 1)
+          ...currentResourceToUpdate.slice(0, indexToUpdate),
+          newResourceToUpdate,
+          ...currentResourceToUpdate.slice(indexToUpdate + 1)
         ]
       };
       break;
     case "DELETE_RESOURCE":
-      const currentUserToDelete = [...state.users];
-      const indexToDelete = currentUserToDelete.findIndex(user => {
-        return user.id === action.payload.id;
-      });
+      const currentResourceToDelete = state.activeResource === "1" ? state.todos : state.users;
+      console.log("current res to delete", currentResourceToDelete);
+      const indexToDelete = currentResourceToDelete.findIndex(resource => resource.id === action.payload);
+      console.log("resource to delete", indexToDelete);
+      let resourceType = state.activeResource === "1" ? "todos" : "users";
+      console.log("resource type", resourceType);
+      console.log("current res to delete", currentResourceToDelete);
+      let data = [
+        ...currentResourceToDelete.slice(0, indexToDelete),
+        ...currentResourceToDelete.slice(indexToDelete + 1)
+      ];
+      localStorage.setItem([resourceType], JSON.stringify(data));
+
       return {
-        users: [...currentUserToDelete.slice(0, indexToDelete), ...currentUserToDelete.slice(indexToDelete + 1)]
+        ...state,
+        [resourceType]: data
       };
       break;
     default:

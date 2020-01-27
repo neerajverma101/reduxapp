@@ -14,17 +14,17 @@ export const createResource = resource => {
   };
 };
 
-export const deleteResource = (id, resourceType) => {
+export const deleteResource = id => {
   return {
     type: "DELETE_RESOURCE",
-    payload: { id, resourceType }
+    payload: id
   };
 };
 
-export const updateResource = (resource, resourceType) => {
+export const updateResource = (id, value1, value2) => {
   return {
     type: "UPDATE_RESOURCE",
-    payload: { resource, resourceType }
+    payload: { id, value1, value2 }
   };
 };
 

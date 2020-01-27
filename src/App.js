@@ -4,6 +4,7 @@ import ListTasks from "./components/ListTasks";
 import { Tabs, Button, Table, Tag, Divider, Modal, Input, Progress, DatePicker } from "antd";
 import { connect } from "react-redux";
 import "antd/dist/antd.css";
+import moment from "moment";
 import { bindActionCreators } from "redux";
 import {
   getResources,
@@ -65,7 +66,36 @@ class App extends Component {
                         loading={this.props.isLoading}
                         onClick={e => {
                           e.preventDefault();
-                          this.wait(2000);
+
+                          if (
+                            !this.props.actionName ||
+                            !this.props.dateAdded ||
+                            !this.props.name ||
+                            !this.props.email
+                          ) {
+                            console.log("fields empty");
+                            this.wait(2000);
+                          } else {
+                            console.log("fields not empty");
+                            let temp = {};
+                            if (this.props.activeResource === "1") {
+                              temp = {
+                                actionName: this.props.actionName,
+                                dateAdded: this.props.dateAdded
+                              };
+                              console.log("update data", temp);
+
+                              this.props.updateResource(this.props.fieldId, temp.actionName, temp.dateAdded);
+                            } else {
+                              temp = {
+                                name: this.props.name,
+                                email: this.props.email
+                              };
+                              console.log("update data", temp);
+
+                              this.props.updateResource(this.props.id, temp.name, temp.email);
+                            }
+                          }
                         }}
                       >
                         Save
@@ -96,6 +126,10 @@ class App extends Component {
                       />
                       {this.props.activeResource === "1" ? (
                         <DatePicker
+                          format="DD-MM-YYYY"
+                          disabledDate={currentDate => {
+                            return currentDate && currentDate < moment(new Date(), "DD-MM-YYYY");
+                          }}
                           onChange={(date, dateString) => {
                             console.log("date selected", date, dateString);
                             this.props.handleInput("dateAdded", date);
@@ -106,10 +140,7 @@ class App extends Component {
                           placeholder="Enter an email"
                           onChange={e => {
                             e.preventDefault();
-                            this.props.handleInput(
-                              this.props.activeResource === "1" ? "dateAdded" : "email",
-                              e.target.value
-                            );
+                            this.props.handleInput("email", e.target.value);
                           }}
                           type="email"
                         />
@@ -120,19 +151,60 @@ class App extends Component {
                 <div id="content" style={{ marginTop: "15px" }}>
                   {/* content of {e} */}
                   <Table
+                    rowKey={row => row.id}
                     columns={[
-                      { title: "Name", dataIndex: this.props.activeResource === "1" ? "actionName" : "name" },
+                      {
+                        title: "Name",
+
+                        dataIndex: this.props.activeResource === "1" ? "actionName" : "name"
+                      },
                       {
                         title: "Action",
-                        key: "action",
-                        render: () => (
+
+                        render: data => (
                           <span>
-                            <a>Edit </a>
+                            <a
+                              onClick={() => {
+                                // this.props.handleInput(this.props.activeResource==="1"?"actionName":"name")
+                                // this.props.handleInput(this.props.activeResource==="1"?"dateAdded":"email")
+                                if (this.props.activeResource === "1") {
+                                  this.props.handleInput("actionName", data.actionName);
+                                  this.props.handleInput("dateAdded", data.dateAdded);
+                                  this.props.handleModal(true);
+                                } else {
+                                  this.props.handleInput("name", data.name);
+                                  this.props.handleInput("email", data.email);
+                                  this.props.handleInput("fieldId", data.id);
+                                  this.props.handleModal(true);
+                                }
+                                // let temp={}
+                                // if(this.props.activeResource==="1"){
+                                //   temp={
+                                //     actionName:data.actionName,
+                                //     dateAdded:data.dateAdded
+                                //   }
+                                //   console.log("update data",data)
+
+                                //   this.props.updateResource(data.id,temp.actionName,temp.dateAdded)
+                                // }
+                                // else{
+                                //   temp={
+                                //     name:data.name,
+                                //     email:data.email
+                                //   }
+                                //   console.log("update data",data)
+
+                                //   this.props.updateResource(data.id,temp.name,temp.email)
+                                // }
+                              }}
+                            >
+                              Edit{" "}
+                            </a>
                             <Divider type="vertical" />
                             <a
-                              onClick={(record, selected, selectedRows, nativeEvent) => {
-                                console.log("delelte r", record, selected, selectedRows, nativeEvent);
-                                //this.props.deleteResource()
+                              onClick={() => {
+                                console.log("delelte row", data.id);
+                                this.props.deleteResource(data.id);
                               }}
                             >
                               Delete{" "}
