@@ -1,16 +1,7 @@
 import React, { Component } from "react";
 import ListUsers from "./components/ListUsers";
 import ListTasks from "./components/ListTasks";
-import {
-  Tabs,
-  Button,
-  Table,
-  Tag,
-  Divider,
-  Modal,
-  Input,
-  Progress
-} from "antd";
+import { Tabs, Button, Table, Tag, Divider, Modal, Input, Progress, DatePicker } from "antd";
 import { connect } from "react-redux";
 import "antd/dist/antd.css";
 import { bindActionCreators } from "redux";
@@ -21,7 +12,8 @@ import {
   deleteResource,
   handleLoading,
   handleModal,
-  handleInput
+  handleInput,
+  handleActiveResource
 } from "./actions/resourceActions";
 
 class App extends Component {
@@ -31,11 +23,12 @@ class App extends Component {
   }
 
   async wait(duration = 1000) {
+    console.log("inside wait----");
     this.props.handleLoading(true);
-    this.props.createResource("user");
+    this.props.createResource(this.props.activeResource === "1" ? "todos" : "user");
     await new Promise(resolve =>
       setTimeout(() => {
-        console.log("resolve", resolve);
+        console.log("inside promise, resolve", resolve);
         this.props.handleLoading(false);
         this.props.handleModal(false);
       }, duration)
@@ -45,7 +38,7 @@ class App extends Component {
   render() {
     return (
       <div id="main" style={{ padding: "1%", paddingTop: 0 }}>
-        <Tabs defaultActiveKey="1" onChange={key => console.log("key", key)}>
+        <Tabs defaultActiveKey={this.props.activeResource} onChange={key => this.props.handleActiveResource(key)}>
           {["Todos", "Users"].map((e, i) => {
             return (
               <Tabs.TabPane tab={e} key={i + 1}>
@@ -64,7 +57,7 @@ class App extends Component {
                     title={"Create a " + e.slice(0, -1)}
                     onCancel={e => {
                       e.preventDefault();
-                      this.setState({ openModal: false });
+                      this.props.handleModal(false);
                     }}
                     footer={[
                       <Button
@@ -81,7 +74,7 @@ class App extends Component {
                         key="back"
                         onClick={e => {
                           e.preventDefault();
-                          this.setState({ openModal: false });
+                          this.props.handleModal(false);
                         }}
                       >
                         Cancel
@@ -91,21 +84,36 @@ class App extends Component {
                     <div>
                       <Input
                         style={{ marginBottom: "10px" }}
-                        placeholder="Enter name"
+                        placeholder={this.props.activeResource === "1" ? "Enter an action" : "Enter a name"}
                         onChange={e => {
                           e.preventDefault();
-                          this.props.handleInput("name", e.target.value);
+                          this.props.handleInput(
+                            this.props.activeResource === "1" ? "actionName" : "name",
+                            e.target.value
+                          );
                         }}
                         required
                       />
-                      <Input
-                        placeholder="Enter email"
-                        onChange={e => {
-                          e.preventDefault();
-                          this.props.handleInput("email", e.target.value);
-                        }}
-                        type="email"
-                      />
+                      {this.props.activeResource === "1" ? (
+                        <DatePicker
+                          onChange={(date, dateString) => {
+                            console.log("date selected", date, dateString);
+                            this.props.handleInput("dateAdded", date);
+                          }}
+                        ></DatePicker>
+                      ) : (
+                        <Input
+                          placeholder="Enter an email"
+                          onChange={e => {
+                            e.preventDefault();
+                            this.props.handleInput(
+                              this.props.activeResource === "1" ? "dateAdded" : "email",
+                              e.target.value
+                            );
+                          }}
+                          type="email"
+                        />
+                      )}
                     </div>
                   </Modal>
                 </div>
@@ -113,7 +121,7 @@ class App extends Component {
                   {/* content of {e} */}
                   <Table
                     columns={[
-                      { title: "Name", dataIndex: "name", key: "name" },
+                      { title: "Name", dataIndex: this.props.activeResource === "1" ? "actionName" : "name" },
                       {
                         title: "Action",
                         key: "action",
@@ -121,15 +129,19 @@ class App extends Component {
                           <span>
                             <a>Edit </a>
                             <Divider type="vertical" />
-                            <a>Delete </a>
+                            <a
+                              onClick={(record, selected, selectedRows, nativeEvent) => {
+                                console.log("delelte r", record, selected, selectedRows, nativeEvent);
+                                //this.props.deleteResource()
+                              }}
+                            >
+                              Delete{" "}
+                            </a>
                           </span>
                         )
                       }
                     ]}
-                    dataSource={[
-                      { id: "1", name: "a" },
-                      { id: "2", name: "b" }
-                    ]}
+                    dataSource={this.props.activeResource === "1" ? this.props.todos : this.props.users}
                   />
                 </div>
               </Tabs.TabPane>
@@ -146,7 +158,8 @@ function mapStateToProps(state) {
     users: state.resources.users,
     todos: state.resources.todos,
     isLoading: state.resources.isLoading,
-    openModal: state.resources.openModal
+    openModal: state.resources.openModal,
+    activeResource: state.resources.activeResource
   };
 }
 
@@ -159,13 +172,11 @@ function mapDispatchToProps(dispatch) {
       deleteResource,
       handleModal,
       handleLoading,
-      handleInput
+      handleInput,
+      handleActiveResource
     },
     dispatch
   );
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(App);

@@ -10,7 +10,7 @@ export const getResources = () => {
 export const createResource = resource => {
   return {
     type: "CREATE_RESOURCE",
-    payload: { resource }
+    payload: resource
   };
 };
 
@@ -46,5 +46,12 @@ export const handleInput = (key, value) => {
   return {
     type: "SET_INPUT",
     payload: { key, value }
+  };
+};
+
+export const handleActiveResource = key => {
+  return {
+    type: "SET_ACTIVE_RESOURCE",
+    payload: key
   };
 };

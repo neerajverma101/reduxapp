@@ -1,50 +1,66 @@
 export const resourcesReducers = (
   state = {
-    todos: [{}],
-    users: [{}],
+    todos: [],
+    users: [],
     isLoading: false,
     openModal: false,
     name: "",
     email: "",
-    action: "",
-    dateAdded: ""
+    actionName: "",
+    dateAdded: "",
+    activeResource: "1"
   },
   action
 ) => {
   switch (action.type) {
+    case "SET_ACTIVE_RESOURCE":
+      return { ...state, activeResource: action.payload };
+
     case "SET_INPUT":
       let value = action.payload.value;
       let field = action.payload.key;
-      return { [field]: value };
+      return { ...state, [field]: value };
 
     case "OPEN_MODAL":
-      return { openModal: action.payload };
+      return { ...state, openModal: action.payload };
     case "IS_LOADING":
-      return { openModal: action.payload };
+      console.log("isloading payload", action.payload);
+      return { ...state, isLoading: action.payload };
 
     case "GET_RESOURCES":
       console.log("getting resources---", state);
       let todos = localStorage.getItem("todos");
+      todos = JSON.parse(todos);
       let users = localStorage.getItem("users");
-      return { todos, users };
+      users = JSON.parse(users);
+      if (!todos || !users) {
+        return { ...state };
+      } else {
+        return { ...state, todos, users };
+      }
       break;
     case "CREATE_RESOURCE":
       if (action.payload === "user") {
-        let id = !state.users ? 0 : ++state.users.length;
+        console.log("creating a user", state);
+        let id = !state.users ? 0 : 1 + state.users.length;
+        console.log("creating resource", state);
         let data = { id: id, name: state.name, email: state.email };
-        let usersData = !state.todos ? [data] : [...state.users, data];
+        let usersData = !state.users && state.users.length ? [data] : [...state.users, data];
+        console.log("usersdata data---", usersData);
         localStorage.setItem("users", JSON.stringify(usersData));
-        return { users: usersData };
+        return { ...state, users: usersData };
       } else {
-        let id = !state.todos ? 0 : ++state.todos.length;
+        console.log("creating a todo", state);
+        let id = !state.todos ? 0 : 1 + state.todos.length;
         let data = {
           id: id,
-          actionName: state.action,
+          actionName: state.actionName,
           dateAdded: state.dateAdded
         };
         let todosData = !state.todos ? [data] : [...state.todos, data];
+        console.log("todos data---", todosData);
         localStorage.setItem("todos", JSON.stringify(todosData));
-        return { todos: todosData };
+        return { ...state, todos: todosData };
       }
       break;
     case "UPDATE_RESOURCE":
@@ -72,10 +88,7 @@ export const resourcesReducers = (
         return user.id === action.payload.id;
       });
       return {
-        users: [
-          ...currentUserToDelete.slice(0, indexToDelete),
-          ...currentUserToDelete.slice(indexToDelete + 1)
-        ]
+        users: [...currentUserToDelete.slice(0, indexToDelete), ...currentUserToDelete.slice(indexToDelete + 1)]
       };
       break;
     default:
