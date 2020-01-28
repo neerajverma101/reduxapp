@@ -8,7 +8,7 @@ export const resourcesReducers = (
     email: "",
     actionName: "",
     dateAdded: "",
-    fieldId: "",
+    fieldId: 0,
     activeResource: "1"
   },
   action
@@ -31,10 +31,11 @@ export const resourcesReducers = (
     case "GET_RESOURCES":
       console.log("getting resources---", state);
       let todos = localStorage.getItem("todos");
-      todos = JSON.parse(todos);
+      todos = !JSON.parse(todos) ? [] : JSON.parse(todos);
       let users = localStorage.getItem("users");
-      users = JSON.parse(users);
-      if (!todos || !users) {
+      users = !JSON.parse(users) ? [] : JSON.parse(users);
+      console.log("after get resource", todos, users);
+      if (!todos && !users) {
         return { ...state };
       } else {
         return { ...state, todos, users };
@@ -51,6 +52,8 @@ export const resourcesReducers = (
         localStorage.setItem("users", JSON.stringify(usersData));
         state.name = "";
         state.email = "";
+        console.log("reset fields", state.name, state.email);
+
         return { ...state, users: usersData };
       } else {
         console.log("creating a todo", state);
@@ -65,11 +68,14 @@ export const resourcesReducers = (
         localStorage.setItem("todos", JSON.stringify(todosData));
         state.actionName = "";
         state.dateAdded = "";
+        console.log("reset fields", state.actionName, state.dateAdded);
         return { ...state, todos: todosData };
       }
       break;
     case "UPDATE_RESOURCE":
       const currentResourceToUpdate = state.activeResource === "1" ? [...state.todos] : [...state.users];
+      console.log("current", currentResourceToUpdate);
+      console.log("action", action);
       const indexToUpdate = currentResourceToUpdate.findIndex(resource => {
         return resource.id === action.payload.id;
       });
@@ -79,8 +85,15 @@ export const resourcesReducers = (
         [state.activeResource === "1" ? "actionName" : "name"]: action.payload.value1,
         [state.activeResource === "1" ? "dateAdded" : "email"]: action.payload.value2
       };
-      console.log("user to be updated", newResourceToUpdate);
+      console.log("user to be updated", newResourceToUpdate, currentResourceToUpdate);
+      // state.name = "";
+      // state.email = "";
+      // state.actionName = "";
+      // state.dateAdded = "";
+      // state.fieldId = 0;
+      // state.openModal = false;
       return {
+        ...state,
         users: [
           ...currentResourceToUpdate.slice(0, indexToUpdate),
           newResourceToUpdate,

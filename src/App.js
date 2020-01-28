@@ -58,6 +58,7 @@ class App extends Component {
                     title={"Create a " + e.slice(0, -1)}
                     onCancel={e => {
                       e.preventDefault();
+
                       this.props.handleModal(false);
                     }}
                     footer={[
@@ -66,26 +67,26 @@ class App extends Component {
                         loading={this.props.isLoading}
                         onClick={e => {
                           e.preventDefault();
-
-                          if (
-                            !this.props.actionName ||
-                            !this.props.dateAdded ||
-                            !this.props.name ||
-                            !this.props.email
-                          ) {
-                            console.log("fields empty");
-                            this.wait(2000);
-                          } else {
-                            console.log("fields not empty");
+                          console.log(
+                            "save clicked",
+                            this.props.actionName,
+                            this.props.dateAdded,
+                            this.props.name,
+                            this.props.email
+                          );
+                          if (this.props.actionName || this.props.dateAdded || this.props.name || this.props.email) {
+                            console.log("fields not empty, updating resources");
                             let temp = {};
                             if (this.props.activeResource === "1") {
                               temp = {
                                 actionName: this.props.actionName,
                                 dateAdded: this.props.dateAdded
                               };
-                              console.log("update data", temp);
-
+                              console.log("update data", temp, " in ", this.props.fieldId);
+                              console.log("field id", this.props);
                               this.props.updateResource(this.props.fieldId, temp.actionName, temp.dateAdded);
+                              this.props.handleInput("actionName", "");
+                              this.props.handleInput("dateAdded", "");
                             } else {
                               temp = {
                                 name: this.props.name,
@@ -93,8 +94,14 @@ class App extends Component {
                               };
                               console.log("update data", temp);
 
-                              this.props.updateResource(this.props.id, temp.name, temp.email);
+                              this.props.updateResource(this.props.fieldId, temp.name, temp.email);
+                              this.props.handleInput("name", "");
+                              this.props.handleInput("email", "");
                             }
+                            this.props.handleModal(false);
+                          } else {
+                            console.log("fields empty, creating resources");
+                            this.wait(2000);
                           }
                         }}
                       >
@@ -104,6 +111,8 @@ class App extends Component {
                         key="back"
                         onClick={e => {
                           e.preventDefault();
+                          this.props.handleInput(this.props.activeResource === "1" ? "actionName" : "name", "");
+                          this.props.handleInput(this.props.activeResource === "1" ? "dateAdded" : "email", "");
                           this.props.handleModal(false);
                         }}
                       >
@@ -114,7 +123,15 @@ class App extends Component {
                     <div>
                       <Input
                         style={{ marginBottom: "10px" }}
-                        placeholder={this.props.activeResource === "1" ? "Enter an action" : "Enter a name"}
+                        placeholder={
+                          this.props.activeResource === "1"
+                            ? Boolean(this.props.actionName)
+                              ? this.props.actionName
+                              : "Enter an action"
+                            : Boolean(this.props.name)
+                            ? this.props.name
+                            : "Enter a name"
+                        }
                         onChange={e => {
                           e.preventDefault();
                           this.props.handleInput(
@@ -137,7 +154,7 @@ class App extends Component {
                         ></DatePicker>
                       ) : (
                         <Input
-                          placeholder="Enter an email"
+                          placeholder={Boolean(this.props.email) ? this.props.email : "Enter an email"}
                           onChange={e => {
                             e.preventDefault();
                             this.props.handleInput("email", e.target.value);
@@ -164,12 +181,15 @@ class App extends Component {
                         render: data => (
                           <span>
                             <a
-                              onClick={() => {
+                              onClick={e => {
+                                e.preventDefault();
                                 // this.props.handleInput(this.props.activeResource==="1"?"actionName":"name")
                                 // this.props.handleInput(this.props.activeResource==="1"?"dateAdded":"email")
                                 if (this.props.activeResource === "1") {
                                   this.props.handleInput("actionName", data.actionName);
                                   this.props.handleInput("dateAdded", data.dateAdded);
+                                  this.props.handleInput("fieldId", data.id);
+
                                   this.props.handleModal(true);
                                 } else {
                                   this.props.handleInput("name", data.name);
@@ -231,7 +251,12 @@ function mapStateToProps(state) {
     todos: state.resources.todos,
     isLoading: state.resources.isLoading,
     openModal: state.resources.openModal,
-    activeResource: state.resources.activeResource
+    activeResource: state.resources.activeResource,
+    actionName: state.resources.actionName,
+    name: state.resources.name,
+    dateAdded: state.resources.dateAdded,
+    email: state.resources.email,
+    fieldId: state.resources.fieldId
   };
 }
 
