@@ -23,10 +23,31 @@ class App extends Component {
     console.log("component did mount this.props", this.props);
   }
 
+  checkValidation = () => {
+    let validation = false;
+    if (this.props.activeResource === "1") {
+      if (!this.props.actionName) {
+        alert("Enter an action name");
+      } else if (!this.props.dateAdded) {
+        alert("Select a date");
+      } else {
+        validation = true;
+      }
+    } else {
+      if (!this.props.name) {
+        alert("Enter a name");
+      } else if (!this.props.email) {
+        alert("Enter an email");
+      } else {
+        validation = true;
+      }
+    }
+    return validation;
+  };
+
   async wait(duration = 1000) {
     console.log("inside wait----");
     this.props.handleLoading(true);
-    this.props.createResource(this.props.activeResource === "1" ? "todos" : "user");
     await new Promise(resolve =>
       setTimeout(() => {
         console.log("inside promise, resolve", resolve);
@@ -74,34 +95,36 @@ class App extends Component {
                             this.props.name,
                             this.props.email
                           );
-                          if (this.props.actionName || this.props.dateAdded || this.props.name || this.props.email) {
-                            console.log("fields not empty, updating resources");
-                            let temp = {};
-                            if (this.props.activeResource === "1") {
-                              temp = {
-                                actionName: this.props.actionName,
-                                dateAdded: this.props.dateAdded
-                              };
-                              console.log("update data", temp, " in ", this.props.fieldId);
-                              console.log("field id", this.props);
-                              this.props.updateResource(this.props.fieldId, temp.actionName, temp.dateAdded);
-                              this.props.handleInput("actionName", "");
-                              this.props.handleInput("dateAdded", "");
+                          let v = this.checkValidation();
+                          console.log("v--", v);
+                          if (v) {
+                            if (this.props.fieldId) {
+                              console.log("updating resources");
+                              let temp = {};
+                              if (this.props.activeResource === "1") {
+                                temp = {
+                                  actionName: this.props.actionName,
+                                  dateAdded: this.props.dateAdded
+                                };
+                                console.log("update data", temp, " in ", this.props.fieldId);
+                                console.log("field id", this.props);
+                                this.wait(2000);
+                                this.props.updateResource(this.props.fieldId, temp.actionName, temp.dateAdded);
+                              } else {
+                                temp = {
+                                  name: this.props.name,
+                                  email: this.props.email
+                                };
+                                console.log("update data", temp);
+                                this.wait(2000);
+                                this.props.updateResource(this.props.fieldId, temp.name, temp.email);
+                              }
+                              this.props.handleModal(false);
                             } else {
-                              temp = {
-                                name: this.props.name,
-                                email: this.props.email
-                              };
-                              console.log("update data", temp);
-
-                              this.props.updateResource(this.props.fieldId, temp.name, temp.email);
-                              this.props.handleInput("name", "");
-                              this.props.handleInput("email", "");
+                              console.log("creating resources");
+                              this.wait(2000);
+                              this.props.createResource(this.props.activeResource === "1" ? "todos" : "user");
                             }
-                            this.props.handleModal(false);
-                          } else {
-                            console.log("fields empty, creating resources");
-                            this.wait(2000);
                           }
                         }}
                       >
@@ -111,6 +134,8 @@ class App extends Component {
                         key="back"
                         onClick={e => {
                           e.preventDefault();
+                          console.log("back clicked", this.props.activeResource === "1" ? "actionName" : "name");
+                          console.log(this.props.activeResource === "1" ? "dateAdded" : "email");
                           this.props.handleInput(this.props.activeResource === "1" ? "actionName" : "name", "");
                           this.props.handleInput(this.props.activeResource === "1" ? "dateAdded" : "email", "");
                           this.props.handleModal(false);
@@ -125,13 +150,15 @@ class App extends Component {
                         style={{ marginBottom: "10px" }}
                         placeholder={
                           this.props.activeResource === "1"
-                            ? Boolean(this.props.actionName)
+                            ? this.props.actionName
                               ? this.props.actionName
                               : "Enter an action"
-                            : Boolean(this.props.name)
+                            : this.props.name
                             ? this.props.name
                             : "Enter a name"
                         }
+                        allowClear={true}
+                        addonBefore={this.props.activeResource === "1" ? "Action" : "Name"}
                         onChange={e => {
                           e.preventDefault();
                           this.props.handleInput(
@@ -139,10 +166,11 @@ class App extends Component {
                             e.target.value
                           );
                         }}
-                        required
                       />
                       {this.props.activeResource === "1" ? (
                         <DatePicker
+                          value={this.props.dateAdded ? moment(this.props.dateAdded) : null}
+                          style={{ width: "100%" }}
                           format="DD-MM-YYYY"
                           disabledDate={currentDate => {
                             return currentDate && currentDate < moment(new Date(), "DD-MM-YYYY");
@@ -154,7 +182,9 @@ class App extends Component {
                         ></DatePicker>
                       ) : (
                         <Input
-                          placeholder={Boolean(this.props.email) ? this.props.email : "Enter an email"}
+                          placeholder={this.props.email ? this.props.email : "Enter an email"}
+                          addonBefore="Email Address"
+                          allowClear={true}
                           onChange={e => {
                             e.preventDefault();
                             this.props.handleInput("email", e.target.value);
@@ -172,7 +202,7 @@ class App extends Component {
                     columns={[
                       {
                         title: "Name",
-
+                        key: this.props.activeResource === "1" ? "actionName" : "name",
                         dataIndex: this.props.activeResource === "1" ? "actionName" : "name"
                       },
                       {

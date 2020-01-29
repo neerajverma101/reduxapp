@@ -50,6 +50,7 @@ export const resourcesReducers = (
         let usersData = !state.users && state.users.length ? [data] : [...state.users, data];
         console.log("usersdata data---", usersData);
         localStorage.setItem("users", JSON.stringify(usersData));
+        console.log("from local storage", localStorage.getItem("users"));
         state.name = "";
         state.email = "";
         console.log("reset fields", state.name, state.email);
@@ -86,19 +87,20 @@ export const resourcesReducers = (
         [state.activeResource === "1" ? "dateAdded" : "email"]: action.payload.value2
       };
       console.log("user to be updated", newResourceToUpdate, currentResourceToUpdate);
-      // state.name = "";
-      // state.email = "";
-      // state.actionName = "";
-      // state.dateAdded = "";
-      // state.fieldId = 0;
-      // state.openModal = false;
+      state.name = "";
+      state.email = "";
+      state.actionName = "";
+      state.dateAdded = "";
+      state.fieldId = 0;
+      let resourceData = [
+        ...currentResourceToUpdate.slice(0, indexToUpdate),
+        newResourceToUpdate,
+        ...currentResourceToUpdate.slice(indexToUpdate + 1)
+      ];
+      localStorage.setItem([state.activeResource === "1" ? "todos" : "users"], JSON.stringify(resourceData));
       return {
         ...state,
-        users: [
-          ...currentResourceToUpdate.slice(0, indexToUpdate),
-          newResourceToUpdate,
-          ...currentResourceToUpdate.slice(indexToUpdate + 1)
-        ]
+        users: data
       };
       break;
     case "DELETE_RESOURCE":
@@ -114,6 +116,7 @@ export const resourcesReducers = (
         ...currentResourceToDelete.slice(indexToDelete + 1)
       ];
       localStorage.setItem([resourceType], JSON.stringify(data));
+      state.fieldId = 0;
 
       return {
         ...state,
